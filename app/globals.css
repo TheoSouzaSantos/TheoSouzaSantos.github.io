@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f5f3ee;
+  --surface: #ebe8e1;
+  --foreground: #1a1916;
+  --muted: #5e5a52;
+  --border: #d9d5cb;
+  --accent: #b4410f;
+  --ok: #2f7d4a;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.dark {
+  --background: #131312;
+  --surface: #1c1c1a;
+  --foreground: #efece5;
+  --muted: #9b968b;
+  --border: #2c2b28;
+  --accent: #e8825a;
+  --ok: #5cb37a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-hanken);
+  --font-display: var(--font-newsreader);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.ease-out-strong {
+  transition-timing-function: var(--ease-out);
+}
+
+/* Opening burn. JS takes over on hydration; if it never runs, this hides the cover. */
+@keyframes burn-fallback {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.burn-intro {
+  animation: burn-fallback 0.3s ease-out 4s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burn-intro {
+    display: none;
+  }
+}
+
+/* A reading travelling from the board to the phone. */
+@keyframes packet {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.packet {
+  animation: packet 0.6s var(--ease-in-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .packet {
+    display: none;
+  }
+}
+
+/* Buzzer pulse around an alarmed sensor LED. */
+@keyframes buzz {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+.buzz {
+  animation: buzz 0.9s var(--ease-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buzz {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/*
+ * Burning underline: a small flame (::before) runs along the baseline like a
+ * fuse and the line it leaves behind (::after) glows. Both move linearly over
+ * the same 0.45s so the flame stays on the line's leading edge.
+ */
+.link-draw {
+  --flame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='72%25' r='62%25'%3E%3Cstop offset='0' stop-color='%23fff3c4'/%3E%3Cstop offset='.45' stop-color='%23ffb347'/%3E%3Cstop offset='1' stop-color='%23e8592a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M5 0C6 4 10 6 10 10.5A5 5 0 0 1 0 10.5C0 8 2 6.5 2.5 4.5 3.5 6 4 6.5 4.6 6.6 4.2 4.5 4.4 2 5 0Z' fill='url(%23g)'/%3E%3C/svg%3E");
+  position: relative;
+}
+
+.link-draw::after,
+.link-draw::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.link-draw::after {
+  bottom: -3px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent), var(--accent) 75%, #ffb347);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition:
+    transform 0.2s var(--ease-out),
+    opacity 0.2s var(--ease-out);
+}
+
+.link-draw::before {
+  bottom: -3px;
+  height: 14px;
+  background: var(--flame) right -4px bottom 0 / 9px 14px no-repeat;
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+@keyframes flame-run {
+  from {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes flame-flicker {
+  to {
+    background-size: 8px 12px;
+  }
+}
+
+.link-draw:focus-visible::after,
+.group:focus-visible .link-draw::after {
+  opacity: 1;
+  transform: scaleX(1);
+  transition:
+    transform 0.45s linear,
+    opacity 0.1s linear;
+}
+
+.link-draw:focus-visible::before,
+.group:focus-visible .link-draw::before {
+  animation:
+    flame-run 0.6s linear forwards,
+    flame-flicker 0.12s linear infinite alternate;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link-draw:hover::after,
+  .group:hover .link-draw::after {
+    opacity: 1;
+    transform: scaleX(1);
+    transition:
+      transform 0.45s linear,
+      opacity 0.1s linear;
+  }
+
+  .link-draw:hover::before,
+  .group:hover .link-draw::before {
+    animation:
+      flame-run 0.6s linear forwards,
+      flame-flicker 0.12s linear infinite alternate;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-draw::before {
+    display: none;
+  }
+
+  .link-draw::after {
+    transform: scaleX(1);
+    transition: opacity 0.2s ease;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 50;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+}
+
+.skip-link:focus {
+  left: 1rem;
+}
